@@ -2,8 +2,6 @@
 
 Pull a OneDrive-hosted `Jobs.xlsx`, classify new rows with an LLM, and sync structured results to Notion—automatically, safely, and fast.
 
-![Screenshot placeholder: end-to-end flow](docs/flow.png)
-
 ---
 
 ## ✨ Highlights
@@ -51,6 +49,7 @@ After processing, copy the local `Jobs.xlsx` back to OneDrive via Finder or `cp`
 6. The updated dataframe is written back to the local Excel file through [notion_sync/excel_io.py](notion_sync/excel_io.py).
 
 ![Screenshot placeholder: Notion sync](docs/notion_properties.png)
+![Screenshot placeholder: end-to-end flow](docs/flow.png)
 
 ---
 
