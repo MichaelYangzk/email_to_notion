@@ -1,6 +1,6 @@
 # Email Ingestion and Notion Sync
 
-![Screenshot placeholder: end-to-end flow](docs/placeholder-flow.png)
+![Screenshot placeholder: end-to-end flow](docs/flow.png)
 
 This repo pulls a OneDrive-hosted Jobs.xlsx into a local working copy, classifies new rows with an LLM, and syncs structured results to Notion.
 
@@ -38,7 +38,7 @@ This repo pulls a OneDrive-hosted Jobs.xlsx into a local working copy, classifie
 5. Stage updates respect forward-only progression and duplicate-body suppression in [notion_sync/idempotency.py](notion_sync/idempotency.py) and [notion_sync/page_template.py](notion_sync/page_template.py).
 6. The updated dataframe is written back to the local Excel file through [notion_sync/excel_io.py](notion_sync/excel_io.py).
 
-![Screenshot placeholder: Notion sync](docs/placeholder-notion.png)
+![Screenshot placeholder: Notion sync](docs/notion_properties.png)
 
 ---
 
@@ -80,4 +80,4 @@ After processing, copy the local Jobs.xlsx back to OneDrive using Finder or a sh
 - Notion sync: [notion_sync/runner.py](notion_sync/runner.py) and helpers in [notion_sync](notion_sync)
 - Docs: [docs/PRODUCT_FEATURES.md](docs/PRODUCT_FEATURES.md), [docs/LOCAL_COPY_WORKFLOW.md](docs/LOCAL_COPY_WORKFLOW.md)
 
-![Screenshot placeholder: LLM results](docs/placeholder-llm.png)
+![Screenshot placeholder: LLM results](docs/notion_example.png)
