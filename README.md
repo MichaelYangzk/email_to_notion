@@ -1,6 +1,8 @@
-# Job Auto-Apply
+# JobAutoApply
 
-A compliant, small-batch job application email system for reaching out to startups. Send personalized cold emails, track followups, and auto-detect replies.
+A compliant, small-batch job application email system with bidirectional Notion integration. Send personalized cold emails, track followups, classify replies with LLM, and manage everything from a Notion dashboard.
+
+> Built on [shuaiyy-ux/email_to_notion](https://github.com/shuaiyy-ux/email_to_notion) — extended with custom domain email, Resend API, Cloudflare routing, and Claude LLM classification.
 
 ## Features
 
@@ -340,6 +342,21 @@ python main.py loop --interval=60
 | `schedule` | Schedule interview-related email |
 | `archive` | Mark as not interested |
 | `ignore` | Skip, do nothing |
+
+### How the LLM Classification Works
+
+The LLM assigns structured labels to every incoming email:
+- **Stage** — `applied`, `received`, `interview_scheduled`, `offer`, etc.
+- **Priority** — `extremely high`, `high`, `medium`, `low`
+- **Next Action** — `reply`, `schedule`, `follow_up`, `archive`, etc.
+- **Importance Score** — 0.0 to 1.0
+- **Summary** — One-line description of what to do
+
+Outputs are validated against allowed values so you don't get surprises. Forward-only stage logic prevents regression (e.g., can't go from "offer" back to "applied").
+
+![Notion properties view](docs/notion_properties.png)
+![End-to-end flow](docs/flow.png)
+![LLM classification results in Notion](docs/notion_example.png)
 
 ---
 
