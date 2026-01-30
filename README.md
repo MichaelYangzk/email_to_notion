@@ -1,13 +1,23 @@
 # Email ↔ Notion — Bidirectional Sync
 
-Two-way bridge between Gmail and Notion for job application tracking.
+Two-way bridge between email and Notion for job application tracking.
 
-**PUSH** (Email → Notion): Gmail IMAP → LLM classification → Notion database
+**PUSH** (Email → Notion): Inbox → LLM classification → Notion database
 **PULL** (Notion → Email): Notion action commands → job-auto-apply email engine
 
-Forked from [shuaiyy-ux/email_to_notion](https://github.com/shuaiyy-ux/email_to_notion). Extended with Gmail IMAP source, Notion trigger, and [job-auto-apply](https://github.com/MichaelYangzk/job-auto-apply) integration.
+Forked from [shuaiyy-ux/email_to_notion](https://github.com/shuaiyy-ux/email_to_notion). Extended with Gmail IMAP source, Anthropic Claude LLM, Notion trigger, and [job-auto-apply](https://github.com/MichaelYangzk/job-auto-apply) integration.
 
 ---
+
+## Platform Dependencies
+
+| Service | Purpose | Free Tier | Required |
+|---------|---------|-----------|----------|
+| [Notion](https://notion.so) | Email tracking database + control terminal | Free | Yes |
+| [Anthropic](https://console.anthropic.com) | LLM classification (Claude Haiku) | Pay-per-use | Yes (or OpenAI) |
+| [OpenAI](https://platform.openai.com) | Alternative LLM backend | Pay-per-use | Optional |
+| [job-auto-apply](https://github.com/MichaelYangzk/job-auto-apply) | Email sending engine (Resend/SMTP) | — | Yes (for PULL) |
+| Gmail IMAP | Read incoming replies | Free | Yes (for PUSH) |
 
 ## Architecture
 
@@ -25,12 +35,13 @@ Forked from [shuaiyy-ux/email_to_notion](https://github.com/shuaiyy-ux/email_to_
     (poll for checked actions)         (IMAP fetch)
     → email_actions.py                       ↓
     → job-auto-apply CLI              LLM.py (classify)
-    → SMTP send                            ↓
+    → Resend / SMTP send                   ↓
             │                     notion_sync/ (sync)
             └────────────┐          ┌────────────┘
                          ↓          ↑
                   ┌──────────────────────┐
-                  │   Gmail (SMTP/IMAP)  │
+                  │  Resend (send) +     │
+                  │  Gmail IMAP (receive) │
                   └──────────────────────┘
 ```
 
@@ -46,7 +57,7 @@ pip install -r requirements.txt
 
 # 3. Configure
 cp .env.example .env
-# Edit .env with your Notion token, Gmail credentials, OpenAI key
+# Edit .env — see Configuration section below
 
 # 4. Run bidirectional sync
 python main.py           # One full cycle (push + pull)
@@ -61,7 +72,7 @@ python main.py excel     # Legacy Excel-based flow
 ### PUSH: Email → Notion
 
 1. `gmail_source.py` fetches recent emails via Gmail IMAP
-2. `LLM.py` classifies each email (stage, priority, next action, importance score)
+2. `LLM.py` classifies each email using Claude Haiku (or GPT-4o-mini)
 3. `notion_sync/` creates or updates Notion database pages
 4. Forward-only stage protection prevents regression (e.g., can't go from "offer" back to "applied")
 
@@ -86,21 +97,34 @@ python main.py excel     # Legacy Excel-based flow
 
 ## Configuration
 
-### Required Environment Variables
-
-| Variable | Description |
-|----------|-------------|
-| `NOTION_TOKEN` | Notion internal integration token |
-| `NOTION_DATABASE_ID` | Target Notion database ID |
-| `FROM_EMAIL` | Gmail address |
-| `GMAIL_APP_PASSWORD` | Gmail App Password (16 chars) |
-| `OPENAI_API_KEY` | OpenAI API key for LLM classification |
-
-### Optional
+### LLM Provider
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `OPENAI_MODEL` | `gpt-4o-mini` | LLM model for classification |
+| `LLM_PROVIDER` | `anthropic` | `anthropic` or `openai` |
+| `ANTHROPIC_API_KEY` | — | Required if using Anthropic |
+| `ANTHROPIC_MODEL` | `claude-3-5-haiku-20241022` | Claude model for classification |
+| `OPENAI_API_KEY` | — | Required if using OpenAI |
+| `OPENAI_MODEL` | `gpt-4o-mini` | OpenAI model for classification |
+
+### Notion
+
+| Variable | Description |
+|----------|-------------|
+| `NOTION_TOKEN` | Notion internal integration token ([create here](https://www.notion.so/my-integrations)) |
+| `NOTION_DATABASE_ID` | Target Notion database ID (from the database URL) |
+
+### Email (for PUSH direction)
+
+| Variable | Description |
+|----------|-------------|
+| `FROM_EMAIL` | Gmail address for IMAP reading |
+| `GMAIL_APP_PASSWORD` | Gmail App Password (16 chars) |
+
+### Bridge (for PULL direction)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
 | `JOB_APPLY_DIR` | `../job-auto-apply` | Path to job-auto-apply project |
 | `NODE_BIN` | `node` | Node.js binary path |
 
@@ -132,7 +156,7 @@ email_to_notion/
 ├── gmail_source.py         # Gmail IMAP reader (replaces OneDrive/Excel)
 ├── email_actions.py        # Bridge to job-auto-apply CLI
 ├── notion_trigger.py       # Poll Notion → trigger email actions
-├── LLM.py                  # OpenAI LLM classification
+├── LLM.py                  # LLM classification (Anthropic / OpenAI)
 ├── schema_converter.py     # DataFrame type normalization
 ├── local_copy_manager.py   # Legacy: OneDrive Excel merge
 ├── notion_sync/
@@ -149,7 +173,7 @@ email_to_notion/
 
 ## Related Projects
 
-- [job-auto-apply](https://github.com/MichaelYangzk/job-auto-apply) — Gmail SMTP/IMAP email engine
+- [job-auto-apply](https://github.com/MichaelYangzk/job-auto-apply) — Email sending engine (Resend / Gmail SMTP / SendGrid) with custom domain setup guide
 - [notion-trigger](https://github.com/MichaelYangzk/Tensor_revive/tree/main/tools/notion-trigger) — TypeScript Notion task orchestration (original inspiration)
 
 ## Credits
